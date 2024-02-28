@@ -1,1 +1,0 @@
-import{_ as t,c as o,a as s,w as c,r as n,o as r,b as a}from"./index-2JuMLwqA.js";const _={},l={style:{height:"200vh"},class:"max-w-screen-lg mx-auto"};function i(m,d){const e=n("router-link");return r(),o("div",l,[s(e,{to:"/login"},{default:c(()=>[a("登入按此")]),_:1})])}const u=t(_,[["render",i]]);export{u as default};
