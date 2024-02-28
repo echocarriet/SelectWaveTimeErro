@@ -114,8 +114,10 @@
     </div>
     <Pagination />
   </div>
+  <!-- :endDateProps="endDate" -->
   <AddPullModal ref="AddPullModal" :addPollData="addPollData" :optionsData="addPollData.optionsData"
-    :selectedTagsProps="addPollData.tags" :allTags="allTags" @update-poll="updateNewPoll" />
+    :selectedTagsProps="addPollData.tags" :allTags="allTags" :endDateProps="endDate"
+    @update-poll="updateNewPoll" />
   <EditPullModal ref="EditPullModal" />
   <DelModal ref="DelModal" :delContent="delContent"></DelModal>
   <shareModal ref="ShareModal"></shareModal>
@@ -174,6 +176,8 @@ export default {
         status: 'active',
       },
       allTags: [],
+      startDate: '',
+      endDate: null,
     };
   },
   methods: {
@@ -237,11 +241,9 @@ export default {
             // 取所有會員的投票明細與標籤
             this.polls = res.data.polls;
             const allTags = this.polls.flatMap((poll) => poll.tags);
+            console.log(allTags);
             const filterAlltags = new Set(allTags);
             this.allTags = [...filterAlltags];
-            // 取登入會員的投票明細
-            // this.memberPolls = this.polls.filter((item) => item.createdBy.id === this.memberId);
-            // console.log(this.memberId);
             // this.$swal({
             //   title: `${res.data.message}`,
             // });
@@ -268,14 +270,14 @@ export default {
           {
             title: '',
             imageUrl: 'https://imgur.com/TECsq2J.png',
-            startDate,
           },
         ],
         startDate,
         isPrivate: false,
         tags: [],
       };
-      console.log('voteView回傳', this.addPollData);
+      this.endDate = null;
+
       this.$refs.AddPullModal.openModal();
     },
     // 取得member id後記得加入
@@ -314,7 +316,6 @@ export default {
   mounted() {
     this.getToken();
     this.getPolls();
-    // this.getMemberPolls();
   },
 };
 </script>

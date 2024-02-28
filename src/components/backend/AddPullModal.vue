@@ -112,25 +112,6 @@
               <p class="mb-2 text-base font-medium text-gray-1">投票有效日</p>
             </div>
             <div class="mb-4">
-              <!-- <div class="flex items-center justify-between mb-2">
-                <div class="flex w-4/5">
-                  <span
-                    class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border rounded-e-0 border-gray-300 rounded-s-full">
-                    開始日期
-                  </span>
-                  <input type="date" id="vote-start"
-                    class="rounded-none rounded-e-full bg-gray-50 border text-gray-900 focus:ring-primary focus:border-primary block flex-1 min-w-0 w-full text-sm border-gray-300 px-3 py-4"
-                    v-model="startDate">
-                </div>
-                <div class="flex items-center w/1/5">
-                  <input id="checked-checkbox" type="checkbox" value=""
-                    class="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary-light focus:ring-2"
-                    v-model="nowDate">
-                  <label for="checked-checkbox" class="ms-2 text-sm font-medium text-gray-900">
-                    立即開始
-                  </label>
-                </div>
-              </div> -->
               <div class="flex mb-2">
                 <span
                   class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border rounded-e-0 border-gray-300 rounded-s-full">
@@ -149,6 +130,10 @@
                   class="rounded-none rounded-e-full bg-gray-50 border text-gray-900 focus:ring-primary focus:border-primary block flex-1 min-w-0 w-full text-sm border-gray-300 px-3 py-4"
                   v-model="endDate" @input="clickEndDate">
               </div>
+            </div>
+            <div class="mb-4">
+              <i class="bi bi-calendar-check"></i>
+              開始日：{{ turnDate(addPollDataModal.startDate) }} - 結束日：{{ turnDate(addPollDataModal.endDate) }}
             </div>
             <div class="mb-4">
               <p class="mb-2 text-base font-medium text-gray-1">投票狀態</p>
@@ -183,22 +168,24 @@
           <button type="button"
             class="px-6 py-3 ms-3 text-base font-medium text-gray-900 focus:outline-none bg-white rounded-full border border-gray-200 focus:z-10 focus:ring-4 focus:ring-gray-100 hover:text-white hover:bg-gray-3"
             @click.prevent="modal.hide()">取消</button>
-            <!-- 測試用，記得刪 -->
-            <p class="ms-2">開始:{{ this.addPollDataModal.startDate }}/ {{ startDate }}</p>
-            <p class="ms-2">結束:{{ this.addPollDataModal.endDate }}/ {{ endDate }}</p>
-            <!-- 測試用，記得刪 -->
+          <!-- 測試用，記得刪 -->
+          <p class="ms-2">開始:{{ this.addPollDataModal.startDate }}/ {{ startDate }}</p>
+          <p class="ms-2">結束:{{ this.addPollDataModal.endDate }}/ {{ }}</p>
+          <!-- 測試用，記得刪 -->
         </div>
       </div>
     </div>
   </div>
 </template>
 <script>
+import { mapActions } from 'pinia';
 import ModalMixin from '@/mixins/ModalMixin';
+import dateStore from '@/stores/date';
 
 export default {
   emits: ['update-poll'],
   mixins: [ModalMixin],
-  props: ['addPollData', 'optionsData', 'allTags', 'selectedTagsProps'],
+  props: ['addPollData', 'optionsData', 'allTags', 'selectedTagsProps', 'endDateProps'],
   data() {
     return {
       modal: null,
@@ -215,6 +202,7 @@ export default {
     };
   },
   methods: {
+    ...mapActions(dateStore, ['turnDate']),
     uploadCoverFile() {
       // 投票票券封面
       const uploadFile = this.$refs.fileInput.files[0];
@@ -294,12 +282,11 @@ export default {
           this.$refs.labelInput.value = '';
         }
       }
-
-      console.log(this.selectedTags);
     },
     clickEndDate() {
       // ===== 處理結束日期
       // 選取的日期轉為 YYYY-MM-DDTHH:mm:ss.sssZ
+
       if (this.endDate) {
         const selectedDateTime = new Date(this.endDate);
 
@@ -314,15 +301,18 @@ export default {
         // 生成格式化後的日期時間字串
         const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}Z`;
         this.addPollDataModal.endDate = formattedDateTime;
+        // console.log(this.addPollDataModal.endDate);
       }
     },
+  },
+  computed: {
+
   },
   watch: {
     addPollData: {
       handler() {
         this.addPollDataModal = this.addPollData;
         this.optionsDataModal = this.optionsData;
-        this.selectedTags = this.selectedTagsProps;
         // ===== 處理開始日期(開始日期預設打開Modal就產生當下時間)
         // addPollData.startDate格式為YYYY-MM-DDTHH:mm:ss.sssZ
         // 使用.split('T'))變成['YYYY-MM-DD', 'mm:ss.sssZ']
@@ -332,16 +322,24 @@ export default {
       deep: true,
     },
     startDate() {
-      // API時間格式為YYYY-MM-DDTHH:mm:ss.sssZ,需把startDate的格式YYY-MM-DD調回YYYY-MM-DDTHH:mm:ss.sssZ
-      // 這樣切換日期時 addPollDataModal.startDate才會更新
-
-      // const currentDate = new Date(this.startDate);
-      // const isoDateString = currentDate.toISOString();
-      // let startDate = `${isoDateString.slice(0, 23)}Z`;
-      // const taipeiDate = new Date(currentDate.getTime() + 8 * 60 * 60 * 1000);
-      // startDate = `${taipeiDate.toISOString().slice(0, 23)}Z`;
-      // this.addPollDataModal.startDate = startDate;
-      // console.log(startDate);
+      const currentDate = new Date(this.startDate);
+      const initialDateTime = new Date();
+      // 判斷使用者是否選擇到一開始的日期
+      const isInitial = (
+        currentDate.getFullYear() === initialDateTime.getFullYear()
+        && currentDate.getMonth() === initialDateTime.getMonth()
+        && currentDate.getDate() === initialDateTime.getDate()
+      );
+      // 使用條件判斷設定時間
+      const selectedTime = isInitial ? initialDateTime : currentDate;
+      const isoString = new Date(selectedTime.getTime() + 8 * 60 * 60 * 1000).toISOString();
+      this.addPollDataModal.startDate = `${isoString.slice(0, 23)}Z`;
+    },
+    endDateProps: {
+      handler() {
+        this.endDate = this.endDateProps;
+      },
+      deep: true,
     },
   },
   mounted() {
