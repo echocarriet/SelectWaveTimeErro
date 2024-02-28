@@ -1,1 +1,0 @@
-import{_ as t,c as o,o as s,d as e}from"./index-OfsC_9Fv.js";const c={},n={class:"container flex flex-col items-center justify-center gap-8 py-16"},a=e("h1",{class:"text-4xl font-bold"},"404 - 找不到頁面",-1),_=e("p",{class:"text-lg leading-normal"},"抱歉，我們找不到您要的頁面。",-1),r=[a,_];function l(i,d){return s(),o("main",n,r)}const x=t(c,[["render",l]]);export{x as default};
