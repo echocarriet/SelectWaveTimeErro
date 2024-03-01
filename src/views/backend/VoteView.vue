@@ -1,7 +1,6 @@
 <template>
   <Navbar />
   <NavbarBackend />
-  <NavbarVote />
   <div class="max-w-screen-lg mx-auto px-3">
     <div class="outline outline-1 outline-gray-3 rounded-2xl md:rounded-3xl
     pt-5 pb-10 md:pt-4 md:pb-16 px-3.5 md:px-5 mb-10">
@@ -112,11 +111,11 @@
         </tbody>
       </table>
     </div>
-    <Pagination />
+    <Pagination :totalPage="totalPage" :currentPage="currentPage" @updatePage="getMemberPolls" />
   </div>
   <!-- :endDateProps="endDate" -->
   <AddPullModal ref="AddPullModal" :addPollData="addPollData" :optionsData="addPollData.optionsData"
-    :selectedTagsProps="addPollData.tags" :allTags="allTags" :endDateProps="endDate"
+    :selectedTagsProps="addPollData.tags" :allTags="allTags"
     @update-poll="updateNewPoll" />
   <EditPullModal ref="EditPullModal" />
   <DelModal ref="DelModal" :delContent="delContent"></DelModal>
@@ -129,7 +128,6 @@ import AddPullModal from '@/components/backend/AddPullModal.vue';
 import DelModal from '@/components/backend/DelModal.vue';
 import EditPullModal from '@/components/backend/EditPullModal.vue';
 import NavbarBackend from '@/components/backend/NavbarBackend.vue';
-import NavbarVote from '@/components/backend/NavbarVote.vue';
 import ShareModal from '@/components/backend/ShareModal.vue';
 import ComponentFooter from '@/components/ComponentFooter.vue';
 import Navbar from '@/components/NavbarEl.vue';
@@ -145,7 +143,6 @@ export default {
     DelModal,
     ShareModal,
     NavbarBackend,
-    NavbarVote,
     AddPullModal,
     EditPullModal,
     Pagination,
@@ -153,6 +150,8 @@ export default {
   data() {
     return {
       memberId: '',
+      totalPage: '',
+      currentPage: '', // 當前頁數 預設1
       isNew: false,
       collapseModal: null,
       delContent: '「xxx投票」',
@@ -213,13 +212,18 @@ export default {
           });
         });
     },
-    getMemberPolls() {
-      const apiUrl = `${import.meta.env.VITE_APP_API_URL}/api/poll?createdBy=${this.memberId}`;
+    getMemberPolls(page = 1) {
+      // const apiUrl = `${import.meta.env.VITE_APP_API_URL}/api/poll?createdBy=${this.memberId}`;
+      const apiUrl = `${import.meta.env.VITE_APP_API_URL}/api/poll?page=${page}`;
       this.$http.get(apiUrl)
         .then((res) => {
           if (res.status === 200) {
-            console.log(res);
+            console.log('getMemberPolls', res);
             this.memberPolls = res.data;
+            this.totalMemberPolls = res.data.total;
+            this.currentPage = res.data.page;
+            this.perPage = res.data.limit;
+            this.totalPage = Math.ceil(this.totalMemberPolls / this.perPage);
             // this.$swal({
             //   title: `${res.data.message}`,
             // });
@@ -237,9 +241,9 @@ export default {
       this.$http.get(apiUrl)
         .then((res) => {
           if (res.status === 200) {
-            console.log(res);
             // 取所有會員的投票明細與標籤
             this.polls = res.data.polls;
+            console.log('所有投票', res.data);
             const allTags = this.polls.flatMap((poll) => poll.tags);
             console.log(allTags);
             const filterAlltags = new Set(allTags);
@@ -263,6 +267,7 @@ export default {
       let startDate = `${isoDateString.slice(0, 23)}Z`;
       const taipeiDate = new Date(currentDate.getTime() + 8 * 60 * 60 * 1000);
       startDate = `${taipeiDate.toISOString().slice(0, 23)}Z`;
+      console.log('startDate', startDate);
 
       this.addPollData = {
         imageUrl: 'https://i.imgur.com/D3hp8H6.png',
@@ -276,39 +281,29 @@ export default {
         isPrivate: false,
         tags: [],
       };
-      this.endDate = null;
 
       this.$refs.AddPullModal.openModal();
     },
     // 取得member id後記得加入
     updateNewPoll() {
-      // const token = document.cookie.replace(
-      //   /(?:(?:^|.*;\s*)selectWaveToken\s*=\s*([^;]*).*$)|^.*$/,
-      //   '$1',
-      // );
-      // this.$http.defaults.headers.common.Authorization = token;
-      // const authToken = {
-      //   headers: {
-      //     Authorization: token,
-      //   },
-      // };
-      const apiUrl = `${import.meta.env.VITE_APP_API_URL}/api/poll/`;
-      this.$http.post(apiUrl, this.addPollData)
-        .then((res) => {
-          if (res.status === 200) {
-            console.log(res);
-            this.$swal({
-              title: `${res.data.message}`,
-            });
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-          this.$swal({
-            title: `${err.response.data.message}`,
-          });
-        });
       console.log(this.addPollData);
+      // const apiUrl = `${import.meta.env.VITE_APP_API_URL}/api/poll/`;
+      // this.$http.post(apiUrl, this.addPollData)
+      //   .then((res) => {
+      //     if (res.status === 200) {
+      //       console.log(res);
+      //       this.$swal({
+      //         title: `${res.data.message}`,
+      //       });
+      //     }
+      //   })
+      //   .catch((err) => {
+      //     console.log(err);
+      //     this.$swal({
+      //       title: `${err.response.data.message}`,
+      //     });
+      //   });
+      // console.log(this.addPollData);
       this.$refs.AddPullModal.hideModal();
     },
     ...mapActions(dateStore, ['turnDate']),

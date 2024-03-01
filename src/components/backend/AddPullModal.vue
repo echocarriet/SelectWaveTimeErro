@@ -132,10 +132,6 @@
               </div>
             </div>
             <div class="mb-4">
-              <i class="bi bi-calendar-check"></i>
-              開始日：{{ turnDate(addPollDataModal.startDate) }} - 結束日：{{ turnDate(addPollDataModal.endDate) }}
-            </div>
-            <div class="mb-4">
               <p class="mb-2 text-base font-medium text-gray-1">投票狀態</p>
               <ul class="text-sm font-medium text-gray-1 flex">
                 <li class="border-gray-200">
@@ -162,12 +158,12 @@
         <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b-2xl bottom-0 bg-white sticky">
           <button type="button"
             class="text-white bg-primary hover:bg-primary-dark focus:ring-4 focus:outline-none focus:ring-primary-light font-medium rounded-full text-base px-6 py-3 text-center"
-            @click="$emit('update-poll', addPollDataModal)">
+            @click="saveModal">
             儲存
           </button>
           <button type="button"
             class="px-6 py-3 ms-3 text-base font-medium text-gray-900 focus:outline-none bg-white rounded-full border border-gray-200 focus:z-10 focus:ring-4 focus:ring-gray-100 hover:text-white hover:bg-gray-3"
-            @click.prevent="modal.hide()">取消</button>
+            @click.prevent="cancelModal">取消</button>
           <!-- 測試用，記得刪 -->
           <p class="ms-2">開始:{{ this.addPollDataModal.startDate }}/ {{ startDate }}</p>
           <p class="ms-2">結束:{{ this.addPollDataModal.endDate }}/ {{ }}</p>
@@ -185,7 +181,7 @@ import dateStore from '@/stores/date';
 export default {
   emits: ['update-poll'],
   mixins: [ModalMixin],
-  props: ['addPollData', 'optionsData', 'allTags', 'selectedTagsProps', 'endDateProps'],
+  props: ['addPollData', 'optionsData', 'allTags', 'selectedTagsProps'],
   data() {
     return {
       modal: null,
@@ -289,20 +285,17 @@ export default {
 
       if (this.endDate) {
         const selectedDateTime = new Date(this.endDate);
-
-        // 取得各部分日期時間的數值
-        const year = selectedDateTime.getFullYear();
-        const month = String(selectedDateTime.getMonth() + 1).padStart(2, '0');
-        const day = String(selectedDateTime.getDate()).padStart(2, '0');
-        const hours = String(selectedDateTime.getHours()).padStart(2, '0');
-        const minutes = String(selectedDateTime.getMinutes()).padStart(2, '0');
-        const seconds = String(selectedDateTime.getSeconds()).padStart(2, '0');
-        const milliseconds = String(selectedDateTime.getMilliseconds()).padStart(3, '0');
-        // 生成格式化後的日期時間字串
-        const formattedDateTime = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}Z`;
-        this.addPollDataModal.endDate = formattedDateTime;
-        // console.log(this.addPollDataModal.endDate);
+        const isoDateString = selectedDateTime.toISOString();
+        this.addPollDataModal.endDate = `${isoDateString.slice(0, 23)}Z`;
       }
+    },
+    cancelModal() {
+      this.endDate = null;
+      this.modal.hide();
+    },
+    saveModal() {
+      this.$emit('update-poll', this.addPollDataModal);
+      this.endDate = null;
     },
   },
   computed: {
@@ -334,12 +327,12 @@ export default {
       const selectedTime = isInitial ? initialDateTime : currentDate;
       const isoString = new Date(selectedTime.getTime() + 8 * 60 * 60 * 1000).toISOString();
       this.addPollDataModal.startDate = `${isoString.slice(0, 23)}Z`;
-    },
-    endDateProps: {
-      handler() {
-        this.endDate = this.endDateProps;
-      },
-      deep: true,
+
+      // const selectedTime = isInitial ? initialDateTime : currentDate;
+      // const isoDateString = selectedTime.toISOString();
+      // this.addPollDataModal.startDate = `${isoDateString.slice(0, 23)}Z`;
+      // const taipeiDate = new Date(selectedTime.getTime() + 8 * 60 * 60 * 1000);
+      // this.addPollDataModal.startDate = `${taipeiDate.toISOString().slice(0, 23)}Z`;
     },
   },
   mounted() {
